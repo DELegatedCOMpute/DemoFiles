@@ -1,42 +1,58 @@
 import fs from 'node:fs/promises';
-import { exec } from 'child_process';
-import util from 'node:util'
+import { spawn } from 'child_process';
 
-const my_exec = util.promisify(exec);
+/**
+ * 
+ * @param {*} chunk stream of data
+ * @param {*} isBuild as opposed to isRuntime
+ * @param {*} isStdOut as oppsed to isStdErr
+ */
+const handleChunk = (chunk, isBuild, isStdOut) => {
+  console.log(chunk.toString());
+}
 
 // get all entries in run dir
-const dir_entries = await fs.readdir('./', {withFileTypes: true});
+const dirEntries = await fs.readdir('./', {withFileTypes: true});
 
 // filter to only dirs that don't start with '.'
-const sub_dirs = dir_entries.filter((dir_entry) => {
-  return dir_entry.isDirectory() && !dir_entry.name.startsWith('.');
+const subDirs = dirEntries.filter((dirEntry) => {
+  return dirEntry.isDirectory() && !dirEntry.name.startsWith('.');
 });
 
-const res = {};
-
-// docker build -t {name} {dir}
-// docker run {name}
-
-const promises = sub_dirs.map(async (dir) => {
-  
+// this is bad code to force it to be synchronous
+let mutex = false;
+for (const dir of Object.values(subDirs)) {
   const name = dir.name;
-  res[name] = {};
 
-  console.log(`Starting ${name}`);
-
-  const build_out = await my_exec(`docker build -t ${name} ${name}`);
-  res[name].build = build_out;
-
-  console.log(`Built ${name}`);
-
-  const run_out = await my_exec(`docker run ${name}`);
-  if ((await fs.readdir(dir.name)).includes('.fake-json')) {
-    run_out.stdout = JSON.parse(run_out.stdout);
+  // horrible code, just make a promise next time :)
+  if (mutex) {
+    await new Promise(r => setTimeout(r, 100)); 
   }
-  res[name].run = run_out;
-  console.log(`Finished ${name}`);
-})
+  mutex = true;
 
-await Promise.all(promises);
+  console.log(`\nBuilding ${name}\n`);
 
-console.log(res);
+  const build = spawn('docker', ['build', `-t${name}`, '--progress', 'plain', name]);
+  build.stdout.on('data', (chunk) => {
+    handleChunk(chunk, true, true);
+  });
+  build.stderr.on('data', (chunk) => {
+    handleChunk(chunk, true, false);
+  });
+  build.on('close', (code) => {
+    console.log(`\nBuild closed with code ${code}\n`);
+    if (code) {
+      return;
+    }
+    const run = spawn('docker', ['run', name]);
+    run.stdout.on('data', (chunk) => {
+      handleChunk(chunk, false, true);
+    });
+    run.stderr.on('data', (chunk) => {
+      handleChunk(chunk, false, false);
+    })
+    run.on('close', ()=> {
+      mutex = false;
+    })
+  })
+}
