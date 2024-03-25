@@ -1,22 +1,36 @@
-echo cloning...
-echo
+PROG_ONLY=0
 
-git clone https://github.com/redis/redis.git
-cd redis
+if [ $PROG_ONLY -eq 1 ]; then
+  git clone https://github.com/redis/redis.git -q
+  cd redis
+  echo here1
+  make --silent distclean
+  echo here2
+  make --silent
+  echo here3
+  xxd src/redis-server
+else
+  echo cloning...
+  echo
 
-echo
-echo cloned, cleaning
-echo
+  git clone https://github.com/redis/redis.git
+  cd redis
 
-make distclean
+  echo
+  echo cloned, cleaning
+  echo
 
-echo
-echo cleaned, making
-echo
+  make distclean
 
-make
+  echo
+  echo cleaned, making
+  echo
 
-echo
-echo done making, printing file
+  make
 
-xxd src/redis-server
+  echo
+  echo done making, printing file
+  
+  echo --------------------------------------------------
+  xxd src/redis-server
+fi

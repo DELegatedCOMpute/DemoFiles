@@ -13,4 +13,3 @@ WORKDIR /home
 COPY make.sh /home/make.sh
 
 CMD [ "bash", "make.sh" ]
-
