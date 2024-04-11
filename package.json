@@ -9,5 +9,13 @@
     "start": "node index.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^20.12.7",
+    "delcom-client": "github:DELegatedCOMpute/DELCOM-Client",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.2"
+  }
 }
