@@ -7,14 +7,22 @@ Args:
 Returns:
     count: number of primes between x and y
 """
-def primesBetween(x, y):
+def primesBetween(x, y, printEach):
     count = 0 
     for num in range(x, y + 1):
         if num > 1:
-            for i in range(2, num):
+            if (num == 2):
+              if printEach:
+                print(num)
+              count += 1
+              continue
+            elif (num % 2 == 0):
+              continue
+            for i in range(3, (num // 2) + 1, 2):
                 if (num % i) == 0:
                     break
             else:
-                print(num)
+                if printEach:
+                  print(num)
                 count += 1
-    return count 
+    return count
