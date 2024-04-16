@@ -12,7 +12,7 @@ dotenv.config();
 const MAX = 1_000_000;
 const INTERVAL = 35_000;
 // const INTERVAL = MAX;
-const MAX_LOCAL_WORKERS = 2;
+const MAX_LOCAL_WORKERS = 100;
 const SLEEP_TIME_MS = 500;
 
 const logPrimes = true;
@@ -57,7 +57,7 @@ if (!fs.existsSync(SUBFOLDER)) {
   await fsp.mkdir(SUBFOLDER);
 }
 
-const outDirs: fs.PathLike[] = [];
+const values: number[][] = [];
 
 await Promise.all(
   clients.map(async (client, idx) => {
@@ -98,7 +98,11 @@ await Promise.all(
           if (err) {
             await sleepRand(SLEEP_TIME_MS);
           } else if (res) {
-            outDirs[idx] = res;
+            const file = await fsp.open(`${res}${path.sep}run_std_out`);
+            values[idx] = [];
+            for await (const line of file.readLines()) {
+              values[idx].push(parseInt(line));
+            }
             return;
           }
         } else {
@@ -111,24 +115,6 @@ await Promise.all(
     }
   })
 );
-
-const values: number[][] = [];
-
-try {
-  await Promise.all(
-    outDirs.map(async (val, idx) => {
-      const file = await fsp.open(`${val}${path.sep}run_std_out`);
-      values[idx] = [];
-      for await (const line of file.readLines()) {
-        values[idx].push(parseInt(line));
-      }
-    })
-  );
-} catch (err) {
-  console.log('pall promise');
-}
-
-// console.log(values);
 
 const sol = values.flat();
 
