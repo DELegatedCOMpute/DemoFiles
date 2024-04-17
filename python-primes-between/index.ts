@@ -140,6 +140,6 @@ if (logPrimes) {
   });
 }
 
-console.log(sol.length);
+console.log(`There are ${sol.length} primes between 1 and ${MAX}. See primes.txt`);
 
 exit();
