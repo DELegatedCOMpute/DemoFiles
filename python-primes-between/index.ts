@@ -18,8 +18,8 @@ const SLEEP_TIME_MS = 500;
 const logPrimes = true;
 
 const SUBFOLDER = 'tmp';
-const DOCK_DIR = 'Dockerfile';
-const PROG_DIR = 'primesBetween.py';
+const DOCK_PATHNAME = 'Dockerfile';
+const PROG_PATHNAME = 'primesBetween.py';
 
 function getRandElement<T>(arr: T[] | undefined) {
   if (!arr || arr.length == 0) {
@@ -68,15 +68,15 @@ await Promise.all(
     const lower = idx * INTERVAL + 1;
     const upper = Math.min((idx + 1) * INTERVAL, MAX);
     const dir = `${SUBFOLDER}${path.sep}${idx}`;
-    const dockDir = `${dir}${path.sep}${DOCK_DIR}`;
-    const progDir = `${dir}${path.sep}${PROG_DIR}`;
+    const dockDir = `${dir}${path.sep}${DOCK_PATHNAME}`;
+    const progDir = `${dir}${path.sep}${PROG_PATHNAME}`;
 
     if (!fs.existsSync(dir)) {
       await fsp.mkdir(dir);
     }
     try {
-      await fsp.copyFile(DOCK_DIR, dockDir);
-      await fsp.copyFile(PROG_DIR, progDir);
+      await fsp.copyFile(DOCK_PATHNAME, dockDir);
+      await fsp.copyFile(PROG_PATHNAME, progDir);
       await fsp.appendFile(
         progDir,
         `\n\nprimesBetween(${lower}, ${upper}, ${logPrimes?'True':'False'})`
