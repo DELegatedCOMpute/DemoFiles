@@ -10,7 +10,7 @@ import { exit } from 'node:process';
 
 dotenv.config();
 
-const MAX = 10;
+const MAX = 10_000_000;
 const NUM_WORKERS = 1;
 const INTERVAL = Math.ceil(MAX/NUM_WORKERS);
 // const INTERVAL = MAX;
