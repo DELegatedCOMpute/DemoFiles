@@ -11,16 +11,16 @@ import { exit } from 'node:process';
 dotenv.config();
 
 const MAX = 10_000_000;
-const NUM_WORKERS = 1;
+const NUM_WORKERS = 16;
 const INTERVAL = Math.ceil(MAX/NUM_WORKERS);
 // const INTERVAL = MAX;
 const MAX_LOCAL_WORKERS = 0;
-const SLEEP_TIME_MS = 500;
+const SLEEP_TIME_MS = 10;
 
 const DOCK_PATHNAME = 'Dockerfile';
 const PROG_PATHNAME = 'sha256.py';
-const OUTPUT_PATH_DIR = await fsp.mkdtemp(`${os.tmpdir()}${path.sep}shaout-`);
-const OUTPUT_PATH = `${OUTPUT_PATH_DIR}${path.sep}sha256.txt`;
+// const OUTPUT_PATH_DIR = await fsp.mkdtemp(`${os.tmpdir()}${path.sep}shaout-`);
+// const OUTPUT_PATH = `${OUTPUT_PATH_DIR}${path.sep}sha256.txt`;
 
 function getRandElement<T>(arr: T[] | undefined) {
   if (!arr || arr.length == 0) {
@@ -54,7 +54,7 @@ for (let i = 0; i < MAX; i += INTERVAL) {
   clients.push(new Client(IP, PORT, { timeout: 10_000 }));
 }
 
-const values: string[][] = [];
+const directories: string[] = [];
 
 await Promise.all(
   clients.map(async (client, idx) => {
@@ -91,12 +91,9 @@ await Promise.all(
           ]);
           if (err) {
             await sleepRand(SLEEP_TIME_MS);
-          } else if (res) {
-            const file = await fsp.open(`${res}${path.sep}run_std_out`);
-            values[idx] = [];
-            for await (const line of file.readLines()) {
-              values[idx].push(line);
-            }
+          } 
+          else if (res) {
+            directories[idx] = `${res}${path.sep}run_std_out`;
             return;
           }
         } else {
@@ -110,27 +107,8 @@ await Promise.all(
   })
 );
 
-const sol = values.flat();
-
-clients.forEach((client) => {
-  try {
-    client.quit();
-  } catch (err) {
-    console.log(err);
-  }
-});
-
-const ws = fs.createWriteStream(OUTPUT_PATH);
-sol.forEach((val) => {
-  ws.write(`${val}\n`);
-});
-ws.end();
-await new Promise<void>((res) => {
-  ws.on('finish', ()=> {
-    return res();
-  })
-});
-
-console.log(`See ${OUTPUT_PATH}`);
+directories.forEach((dir, idx) => {
+  console.log(`${idx + 1}: ${dir}`);
+})
 
 exit();
